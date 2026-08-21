@@ -21,7 +21,7 @@ This repository repackages official OpenAI tunnel-client release binaries as mul
 
 ## Validation
 
-Run `just verify` before committing. When Docker is available, also run `just build runtime`. CI must build and smoke-test every flavor, scan for fixed high/critical vulnerabilities, and publish SBOM and provenance attestations.
+Run `just verify` before committing. When Docker is available, also run `just build runtime`. CI must build and smoke-test every flavor, report findings in the unmodified upstream binaries, gate fixed high/critical vulnerabilities in wrapper-owned layers, and publish SBOM and provenance attestations.
 
 ## Automation
 

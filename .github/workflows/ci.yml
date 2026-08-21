@@ -73,7 +73,21 @@ jobs:
       - name: Verify runtime identity
         run: test "$(docker image inspect local/tunnel-client:${{ matrix.target }} --format '{{.Config.User}}')" = "65532:65532"
 
-      - name: Scan image
+      - name: Smoke-test Python toolchain
+        if: matrix.target != 'runtime'
+        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c 'python3 --version && uv --version'
+
+      - name: Report complete image vulnerabilities
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: local/tunnel-client:${{ matrix.target }}
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Gate wrapper image vulnerabilities
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: local/tunnel-client:${{ matrix.target }}
@@ -82,3 +96,4 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          skip-files: /usr/local/bin/tunnel-client,/usr/local/bin/cloudflared
