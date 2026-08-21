@@ -64,6 +64,7 @@ LABEL org.opencontainers.image.title="OpenAI tunnel-client container with uv and
 COPY --from=fetch /out/tunnel-client /usr/local/bin/tunnel-client
 COPY --from=fetch /out/cloudflared /usr/local/bin/cloudflared
 COPY --from=fetch /out/compliance/ /usr/share/licenses/tunnel-client/
+RUN python3 -m pip uninstall --yes msgpack setuptools
 ENV HOME=/tmp \
     UV_CACHE_DIR=/tmp/uv-cache
 USER 65532:65532
