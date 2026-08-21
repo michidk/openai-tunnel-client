@@ -1,0 +1,42 @@
+name: Chart release
+
+on:
+  push:
+    tags:
+      - "chart-v[0-9]+.[0-9]+.[0-9]+"
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Publish Helm chart
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Validate chart tag
+        run: |
+          chart_version=$(sed -n 's/^version: //p' charts/openai-tunnel-client/Chart.yaml)
+          test "${GITHUB_REF_NAME}" = "chart-v${chart_version}"
+          helm lint charts/openai-tunnel-client \
+            --values charts/openai-tunnel-client/ci/test-values.yaml
+
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "${GH_TOKEN}" | helm registry login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Package and publish
+        run: |
+          chart_version=$(sed -n 's/^version: //p' charts/openai-tunnel-client/Chart.yaml)
+          helm package charts/openai-tunnel-client --destination "${RUNNER_TEMP}"
+          helm push \
+            "${RUNNER_TEMP}/openai-tunnel-client-${chart_version}.tgz" \
+            "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/charts"

@@ -41,3 +41,7 @@ TUNNEL_CLIENT_SHA256_ARM64=$(checksum_for arm64)
 EOF
 mv "${updated}" "${repo_root}/versions.env"
 
+sed -i -E "s/^(appVersion: ).*/\1\"${version}\"/" \
+  "${repo_root}/charts/openai-tunnel-client/Chart.yaml"
+sed -i -E "s/^(  tag: ).*/\1\"${version}\"/" \
+  "${repo_root}/charts/openai-tunnel-client/values.yaml"

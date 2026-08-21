@@ -6,6 +6,19 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 # shellcheck disable=SC1091
 source "${repo_root}/versions.env"
 
+chart_app_version=$(sed -n 's/^appVersion: "\(.*\)"$/\1/p' \
+  "${repo_root}/charts/openai-tunnel-client/Chart.yaml")
+chart_image_tag=$(sed -n 's/^  tag: "\(.*\)"$/\1/p' \
+  "${repo_root}/charts/openai-tunnel-client/values.yaml")
+if [[ "${chart_app_version}" != "${TUNNEL_CLIENT_VERSION}" ]]; then
+  echo "chart appVersion ${chart_app_version} does not match ${TUNNEL_CLIENT_VERSION}" >&2
+  exit 1
+fi
+if [[ "${chart_image_tag}" != "${TUNNEL_CLIENT_VERSION}" ]]; then
+  echo "chart image tag ${chart_image_tag} does not match ${TUNNEL_CLIENT_VERSION}" >&2
+  exit 1
+fi
+
 checksums=$(mktemp)
 trap 'rm -f "${checksums}"' EXIT
 

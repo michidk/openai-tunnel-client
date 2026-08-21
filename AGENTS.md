@@ -19,6 +19,12 @@ This repository repackages official OpenAI tunnel-client release binaries as mul
 - Support a read-only root filesystem with writable state supplied through mounted volumes.
 - Do not bake credentials, tunnel IDs, profiles, or customer MCP code into the generic images.
 
+## Helm chart
+
+- Keep the chart scoped to a dedicated tunnel deployment for a network-reachable HTTP MCP server; do not turn it into a generic sidecar injector.
+- Reference existing ConfigMaps and Secrets for profiles and credentials. Never render credential values into chart output.
+- Keep the chart `appVersion` and default image tag synchronized with `versions.env`; version the chart itself independently.
+
 ## Validation
 
 Run `just verify` before committing. When Docker is available, also run `just build runtime`. CI must build and smoke-test every flavor, report findings in the unmodified upstream binaries, gate fixed high/critical vulnerabilities in wrapper-owned layers, and publish SBOM and provenance attestations.

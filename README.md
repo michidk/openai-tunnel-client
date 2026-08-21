@@ -34,6 +34,30 @@ docker run --rm \
 
 See the official [Secure MCP Tunnel documentation](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels/) for supported configuration and deployment patterns.
 
+## Deployment patterns
+
+OpenAI documents two Kubernetes layouts. Choose based on how the MCP server is reached:
+
+- **Dedicated deployment:** run the tunnel client separately when an HTTP MCP server is reachable through a private Kubernetes Service. This keeps tunnel lifecycle and credentials separate from the MCP server. The Helm chart in this repository targets this layout.
+- **Sidecar or co-located container:** run the tunnel client in the MCP server's Pod and connect over `localhost`. Prefer this for stdio MCP servers because `tunnel-client` launches the configured command and therefore needs the command, runtime, and files in the same container or shared Pod.
+
+The generic chart does not inject a sidecar and does not package an MCP server. Sidecar users should reference the appropriate image flavor directly in their workload manifest.
+
+## Helm chart
+
+The chart deploys a dedicated tunnel client for an existing HTTP MCP server. It expects a profile ConfigMap and an API-key Secret; it never creates or stores credentials.
+
+```sh
+helm upgrade --install example \
+  oci://ghcr.io/michidk/charts/openai-tunnel-client \
+  --version 0.1.0 \
+  --set tunnel.profileName=example \
+  --set tunnel.existingConfigMap=example-tunnel-profile \
+  --set tunnel.apiKeySecret.name=example-tunnel-credentials
+```
+
+Production values should also set `image.digest` to the immutable manifest digest for the selected image tag. Chart releases use independent `chart-vX.Y.Z` tags; `appVersion` tracks the packaged upstream tunnel-client release.
+
 ## Updating upstream
 
 The scheduled update workflow opens a pull request containing the new upstream version and both official Linux archive checksums. You can do the same locally:

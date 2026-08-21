@@ -7,6 +7,8 @@ verify:
   python3 -m compileall -q scripts/fetch-release.py
   shellcheck -x scripts/verify-release-metadata scripts/update-version
   scripts/verify-release-metadata
+  helm lint charts/openai-tunnel-client --values charts/openai-tunnel-client/ci/test-values.yaml
+  helm template test charts/openai-tunnel-client --values charts/openai-tunnel-client/ci/test-values.yaml >/dev/null
 
 update version="":
   scripts/update-version {{version}}

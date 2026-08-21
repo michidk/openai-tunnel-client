@@ -26,6 +26,13 @@ jobs:
       - name: Verify pinned upstream checksums
         run: scripts/verify-release-metadata
 
+      - name: Lint and render Helm chart
+        run: |
+          helm lint charts/openai-tunnel-client \
+            --values charts/openai-tunnel-client/ci/test-values.yaml
+          helm template test charts/openai-tunnel-client \
+            --values charts/openai-tunnel-client/ci/test-values.yaml >/dev/null
+
       - name: Run Hadolint
         uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
         with:

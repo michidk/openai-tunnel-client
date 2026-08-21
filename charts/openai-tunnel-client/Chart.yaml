@@ -1,0 +1,15 @@
+apiVersion: v2
+name: openai-tunnel-client
+description: Unofficial deployment of OpenAI Secure MCP Tunnel for an HTTP MCP server
+type: application
+version: 0.1.0
+appVersion: "0.0.12"
+home: https://github.com/michidk/openai-tunnel-client
+sources:
+  - https://github.com/michidk/openai-tunnel-client
+  - https://github.com/openai/tunnel-client
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/links: |
+    - name: OpenAI documentation
+      url: https://developers.openai.com/api/docs/guides/secure-mcp-tunnels/
