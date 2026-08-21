@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
 def download(url: str, destination: Path) -> None:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "michidk/tunnel-client-container"},
+        headers={"User-Agent": "michidk/openai-tunnel-client"},
     )
     for attempt in range(1, 6):
         try:
@@ -104,4 +104,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
