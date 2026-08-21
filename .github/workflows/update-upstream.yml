@@ -1,0 +1,50 @@
+name: Update upstream tunnel-client
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update:
+    name: Update version and checksums
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Update from the latest official release
+        id: update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          scripts/update-version
+          source versions.env
+          echo "version=${TUNNEL_CLIENT_VERSION}" >>"${GITHUB_OUTPUT}"
+
+      - name: Verify updated metadata
+        run: scripts/verify-release-metadata
+
+      - name: Create update pull request
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          branch: deps/openai-tunnel-client
+          delete-branch: true
+          commit-message: "chore(deps): update tunnel-client to v${{ steps.update.outputs.version }}"
+          title: "chore(deps): update tunnel-client to v${{ steps.update.outputs.version }}"
+          body: |
+            Updates the packaged OpenAI tunnel-client release and pins both official Linux archive checksums.
+
+            After this merges, create and push tag `v${{ steps.update.outputs.version }}` to publish the images.
+          labels: |
+            dependencies
+            no-stale
+            bot
+

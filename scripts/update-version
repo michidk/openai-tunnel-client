@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+requested_version=${1:-}
+
+if [[ -z "${requested_version}" ]]; then
+  requested_version=$(gh api repos/openai/tunnel-client/releases/latest --jq .tag_name)
+fi
+version=${requested_version#v}
+if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "invalid tunnel-client version: ${requested_version}" >&2
+  exit 1
+fi
+
+checksums=$(mktemp)
+updated=$(mktemp)
+trap 'rm -f "${checksums}" "${updated}"' EXIT
+
+curl --fail --location --silent --show-error \
+  "https://github.com/openai/tunnel-client/releases/download/v${version}/SHA256SUMS.txt" \
+  >"${checksums}"
+
+checksum_for() {
+  local architecture=$1
+  local filename="tunnel-client-v${version}-linux-${architecture}.zip"
+  local checksum
+  checksum=$(awk -v name="${filename}" '$2 == name { print $1 }' "${checksums}")
+  if [[ ! "${checksum}" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "could not find checksum for ${filename}" >&2
+    exit 1
+  fi
+  printf '%s' "${checksum}"
+}
+
+cat >"${updated}" <<EOF
+# renovate: datasource=github-releases depName=openai/tunnel-client extractVersion=^v(?<version>.*)$
+TUNNEL_CLIENT_VERSION=${version}
+TUNNEL_CLIENT_SHA256_AMD64=$(checksum_for amd64)
+TUNNEL_CLIENT_SHA256_ARM64=$(checksum_for arm64)
+EOF
+mv "${updated}" "${repo_root}/versions.env"
+

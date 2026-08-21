@@ -1,0 +1,15 @@
+changelog:
+  exclude:
+    labels:
+      - no-release-note
+  categories:
+    - title: Upstream releases
+      labels:
+        - dependencies
+    - title: Container changes
+      labels:
+        - enhancement
+    - title: Fixes
+      labels:
+        - bug
+

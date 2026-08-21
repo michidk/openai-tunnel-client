@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+# versions.env is resolved from the repository root computed above.
+# shellcheck disable=SC1091
+source "${repo_root}/versions.env"
+
+checksums=$(mktemp)
+trap 'rm -f "${checksums}"' EXIT
+
+curl --fail --location --silent --show-error \
+  "https://github.com/openai/tunnel-client/releases/download/v${TUNNEL_CLIENT_VERSION}/SHA256SUMS.txt" \
+  >"${checksums}"
+
+verify_entry() {
+  local architecture=$1
+  local expected=$2
+  local filename="tunnel-client-v${TUNNEL_CLIENT_VERSION}-linux-${architecture}.zip"
+  local actual
+  actual=$(awk -v name="${filename}" '$2 == name { print $1 }' "${checksums}")
+  if [[ -z "${actual}" ]]; then
+    echo "missing ${filename} in upstream SHA256SUMS.txt" >&2
+    return 1
+  fi
+  if [[ "${actual}" != "${expected}" ]]; then
+    echo "checksum mismatch for ${filename}: expected ${expected}, upstream has ${actual}" >&2
+    return 1
+  fi
+}
+
+verify_entry amd64 "${TUNNEL_CLIENT_SHA256_AMD64}"
+verify_entry arm64 "${TUNNEL_CLIENT_SHA256_ARM64}"

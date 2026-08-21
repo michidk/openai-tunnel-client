@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Validate release tag
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha256_amd64: ${{ steps.version.outputs.sha256_amd64 }}
+      sha256_arm64: ${{ steps.version.outputs.sha256_arm64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Validate tag and checksums
+        id: version
+        run: |
+          source versions.env
+          test "${GITHUB_REF_NAME}" = "v${TUNNEL_CLIENT_VERSION}"
+          scripts/verify-release-metadata
+          {
+            echo "version=${TUNNEL_CLIENT_VERSION}"
+            echo "sha256_amd64=${TUNNEL_CLIENT_SHA256_AMD64}"
+            echo "sha256_arm64=${TUNNEL_CLIENT_SHA256_ARM64}"
+          } >>"${GITHUB_OUTPUT}"
+
+  image:
+    name: Publish ${{ matrix.flavor }} image
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: runtime
+            target: runtime
+            suffix: ""
+            floating: latest
+          - flavor: python3.12
+            target: python312
+            suffix: -python3.12
+            floating: python3.12
+          - flavor: python3.13
+            target: python313
+            suffix: -python3.13
+            floating: python3.13
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/tunnel-client
+          tags: |
+            type=raw,value=${{ needs.check.outputs.version }}${{ matrix.suffix }}
+            type=raw,value=${{ matrix.floating }}
+
+      - name: Build and push
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          target: ${{ matrix.target }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            TUNNEL_CLIENT_VERSION=${{ needs.check.outputs.version }}
+            TUNNEL_CLIENT_SHA256_AMD64=${{ needs.check.outputs.sha256_amd64 }}
+            TUNNEL_CLIENT_SHA256_ARM64=${{ needs.check.outputs.sha256_arm64 }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+          provenance: mode=max
+          sbom: true
+
+  release:
+    name: Create GitHub release
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
+        with:
+          name: v${{ needs.check.outputs.version }}
+          generate_release_notes: true

@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    name: Lint and verify metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Compile Python
+        run: python3 -m compileall -q scripts/fetch-release.py
+
+      - name: Run ShellCheck
+        run: shellcheck -x scripts/verify-release-metadata scripts/update-version
+
+      - name: Verify pinned upstream checksums
+        run: scripts/verify-release-metadata
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
+        with:
+          dockerfile: Dockerfile
+
+  build:
+    name: Build and smoke-test ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [runtime, python312, python313]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+
+      - name: Read upstream version
+        id: version
+        run: |
+          source versions.env
+          {
+            echo "version=${TUNNEL_CLIENT_VERSION}"
+            echo "sha256_amd64=${TUNNEL_CLIENT_SHA256_AMD64}"
+            echo "sha256_arm64=${TUNNEL_CLIENT_SHA256_ARM64}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: .
+          load: true
+          target: ${{ matrix.target }}
+          tags: local/tunnel-client:${{ matrix.target }}
+          build-args: |
+            TUNNEL_CLIENT_VERSION=${{ steps.version.outputs.version }}
+            TUNNEL_CLIENT_SHA256_AMD64=${{ steps.version.outputs.sha256_amd64 }}
+            TUNNEL_CLIENT_SHA256_ARM64=${{ steps.version.outputs.sha256_arm64 }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+
+      - name: Smoke-test tunnel-client
+        run: docker run --rm local/tunnel-client:${{ matrix.target }} --version
+
+      - name: Verify runtime identity
+        run: test "$(docker image inspect local/tunnel-client:${{ matrix.target }} --format '{{.Config.User}}')" = "65532:65532"
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: local/tunnel-client:${{ matrix.target }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
