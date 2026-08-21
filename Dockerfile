@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.26
 
-ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
-ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-alpine@sha256:138f90e67682b923c4bbcc91d2bae98434e8ba8b32b555e390b055b504f69f91
+ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-alpine@sha256:81285c44b0ed162841eb91d3e6671dd6e63960b86ef47dcbe34d4a9418112175
 
 FROM --platform=$BUILDPLATFORM ${UV_PYTHON312_IMAGE} AS fetch
 ARG TARGETARCH
@@ -64,8 +64,13 @@ LABEL org.opencontainers.image.title="OpenAI tunnel-client container with uv and
 COPY --from=fetch /out/tunnel-client /usr/local/bin/tunnel-client
 COPY --from=fetch /out/cloudflared /usr/local/bin/cloudflared
 COPY --from=fetch /out/compliance/ /usr/share/licenses/tunnel-client/
+RUN rm -rf \
+      /usr/local/bin/pip \
+      /usr/local/bin/pip3 \
+      /usr/local/bin/pip3.13 \
+      /usr/local/lib/python3.13/site-packages/pip \
+      /usr/local/lib/python3.13/site-packages/pip-*.dist-info
 ENV HOME=/tmp \
     UV_CACHE_DIR=/tmp/uv-cache
 USER 65532:65532
 ENTRYPOINT ["/usr/local/bin/tunnel-client"]
-

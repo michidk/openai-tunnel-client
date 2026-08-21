@@ -54,7 +54,7 @@ just verify
 just build runtime
 ```
 
-CI additionally builds and smoke-tests every flavor and blocks high or critical fixed vulnerabilities with Trivy.
+CI additionally builds and smoke-tests every flavor. Trivy reports the complete image, including findings in the unmodified upstream binaries, and separately blocks fixed high or critical vulnerabilities in layers this repository controls.
 
 ## Licensing
 
