@@ -64,6 +64,12 @@ LABEL org.opencontainers.image.title="OpenAI tunnel-client container with uv and
 COPY --from=fetch /out/tunnel-client /usr/local/bin/tunnel-client
 COPY --from=fetch /out/cloudflared /usr/local/bin/cloudflared
 COPY --from=fetch /out/compliance/ /usr/share/licenses/tunnel-client/
+RUN rm -rf \
+      /usr/local/bin/pip \
+      /usr/local/bin/pip3 \
+      /usr/local/bin/pip3.13 \
+      /usr/local/lib/python3.13/site-packages/pip \
+      /usr/local/lib/python3.13/site-packages/pip-*.dist-info
 ENV HOME=/tmp \
     UV_CACHE_DIR=/tmp/uv-cache
 USER 65532:65532

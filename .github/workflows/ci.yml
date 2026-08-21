@@ -77,6 +77,10 @@ jobs:
         if: matrix.target != 'runtime'
         run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c 'python3 --version && uv --version'
 
+      - name: Verify pip is absent from Python 3.13
+        if: matrix.target == 'python313'
+        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c '! python3 -m pip --version'
+
       - name: Report complete image vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -96,4 +100,5 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          skip-dirs: /usr/share/licenses/tunnel-client
           skip-files: /usr/local/bin/tunnel-client,/usr/local/bin/cloudflared
