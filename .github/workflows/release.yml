@@ -76,7 +76,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/tunnel-client
+          images: ghcr.io/${{ github.repository_owner }}/openai-tunnel-client
           tags: |
             type=raw,value=${{ needs.check.outputs.version }}${{ matrix.suffix }}
             type=raw,value=${{ matrix.floating }}

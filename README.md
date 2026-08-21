@@ -1,4 +1,4 @@
-# tunnel-client-container
+# openai-tunnel-client
 
 Unofficial, reproducible container packaging for OpenAI's Secure MCP Tunnel client. The images contain unmodified binaries from the official `openai/tunnel-client` release, verified against pinned upstream SHA-256 checksums during the build.
 
@@ -8,9 +8,9 @@ This project is not an official OpenAI image and is not endorsed or supported by
 
 | Image tag | Contents | Intended use |
 | --- | --- | --- |
-| `ghcr.io/michidk/tunnel-client:<version>` | `tunnel-client`, bundled `cloudflared`, and CA certificates | HTTP MCP servers and deployments that provide their own profile |
-| `ghcr.io/michidk/tunnel-client:<version>-python3.12` | Runtime plus `uv` and Python 3.12 | Stdio MCP commands requiring Python 3.12 |
-| `ghcr.io/michidk/tunnel-client:<version>-python3.13` | Runtime plus `uv` and Python 3.13 | Stdio MCP commands requiring Python 3.13 |
+| `ghcr.io/michidk/openai-tunnel-client:<version>` | `tunnel-client`, bundled `cloudflared`, and CA certificates | HTTP MCP servers and deployments that provide their own profile |
+| `ghcr.io/michidk/openai-tunnel-client:<version>-python3.12` | Runtime plus `uv` and Python 3.12 | Stdio MCP commands requiring Python 3.12 |
+| `ghcr.io/michidk/openai-tunnel-client:<version>-python3.13` | Runtime plus `uv` and Python 3.13 | Stdio MCP commands requiring Python 3.13 |
 
 Versioned tags mirror the upstream release. Floating `latest`, `python3.12`, and `python3.13` tags are published for discovery, but production deployments should use a versioned tag and immutable manifest digest.
 
@@ -19,7 +19,7 @@ All variants run as numeric user and group `65532`, set `HOME=/tmp`, and support
 ## Usage
 
 ```sh
-docker run --rm ghcr.io/michidk/tunnel-client:0.0.12 --version
+docker run --rm ghcr.io/michidk/openai-tunnel-client:0.0.12 --version
 ```
 
 Mount a profile and inject the runtime API key through the environment:
@@ -28,7 +28,7 @@ Mount a profile and inject the runtime API key through the environment:
 docker run --rm \
   -e CONTROL_PLANE_API_KEY \
   -v "$PWD/profiles:/profiles:ro" \
-  ghcr.io/michidk/tunnel-client:0.0.12 \
+  ghcr.io/michidk/openai-tunnel-client:0.0.12 \
   run --profile example --profile-dir /profiles
 ```
 

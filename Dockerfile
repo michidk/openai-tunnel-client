@@ -20,8 +20,8 @@ FROM scratch AS runtime
 ARG TUNNEL_CLIENT_VERSION
 LABEL org.opencontainers.image.title="OpenAI tunnel-client container" \
       org.opencontainers.image.description="Unofficial container packaging for OpenAI Secure MCP Tunnel" \
-      org.opencontainers.image.source="https://github.com/michidk/tunnel-client-container" \
-      org.opencontainers.image.url="https://github.com/michidk/tunnel-client-container" \
+      org.opencontainers.image.source="https://github.com/michidk/openai-tunnel-client" \
+      org.opencontainers.image.url="https://github.com/michidk/openai-tunnel-client" \
       org.opencontainers.image.documentation="https://developers.openai.com/api/docs/guides/secure-mcp-tunnels/" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${TUNNEL_CLIENT_VERSION}"
@@ -39,8 +39,8 @@ FROM ${UV_PYTHON312_IMAGE} AS python312
 ARG TUNNEL_CLIENT_VERSION
 LABEL org.opencontainers.image.title="OpenAI tunnel-client container with uv and Python 3.12" \
       org.opencontainers.image.description="Unofficial container packaging for OpenAI Secure MCP Tunnel" \
-      org.opencontainers.image.source="https://github.com/michidk/tunnel-client-container" \
-      org.opencontainers.image.url="https://github.com/michidk/tunnel-client-container" \
+      org.opencontainers.image.source="https://github.com/michidk/openai-tunnel-client" \
+      org.opencontainers.image.url="https://github.com/michidk/openai-tunnel-client" \
       org.opencontainers.image.documentation="https://developers.openai.com/api/docs/guides/secure-mcp-tunnels/" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${TUNNEL_CLIENT_VERSION}"
@@ -56,8 +56,8 @@ FROM ${UV_PYTHON313_IMAGE} AS python313
 ARG TUNNEL_CLIENT_VERSION
 LABEL org.opencontainers.image.title="OpenAI tunnel-client container with uv and Python 3.13" \
       org.opencontainers.image.description="Unofficial container packaging for OpenAI Secure MCP Tunnel" \
-      org.opencontainers.image.source="https://github.com/michidk/tunnel-client-container" \
-      org.opencontainers.image.url="https://github.com/michidk/tunnel-client-container" \
+      org.opencontainers.image.source="https://github.com/michidk/openai-tunnel-client" \
+      org.opencontainers.image.url="https://github.com/michidk/openai-tunnel-client" \
       org.opencontainers.image.documentation="https://developers.openai.com/api/docs/guides/secure-mcp-tunnels/" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${TUNNEL_CLIENT_VERSION}"
