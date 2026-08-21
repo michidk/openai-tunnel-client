@@ -75,7 +75,7 @@ jobs:
 
       - name: Smoke-test Python toolchain
         if: matrix.target != 'runtime'
-        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c 'python3 --version && uv --version'
+        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c 'python3 --version && uv --version && ! python3 -m pip --version'
 
       - name: Report complete image vulnerabilities
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
