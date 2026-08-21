@@ -96,4 +96,5 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          skip-dirs: /usr/share/licenses/tunnel-client
           skip-files: /usr/local/bin/tunnel-client,/usr/local/bin/cloudflared
