@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.18
+# syntax=docker/dockerfile:1.26
 
 ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
