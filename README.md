@@ -56,18 +56,18 @@ helm upgrade --install example \
   --set tunnel.apiKeySecret.name=example-tunnel-credentials
 ```
 
-Production values should also set `image.digest` to the immutable manifest digest for the selected image tag. Chart releases use independent `chart-vX.Y.Z` tags; `appVersion` tracks the packaged upstream tunnel-client release.
+The chart defaults to the immutable runtime manifest digest matching its image tag. Override both `image.tag` and `image.digest` together when selecting another release. Chart releases use independent `chart-vX.Y.Z` tags; `appVersion` tracks the packaged upstream tunnel-client release.
 
 ## Updating upstream
 
-The scheduled update workflow opens a pull request containing the new upstream version and both official Linux archive checksums. You can do the same locally:
+The scheduled update workflow commits a new upstream version and both official Linux archive checksums directly to `main`. It clears the previous chart image digest because the new manifest does not exist yet. You can perform the same metadata update locally:
 
 ```sh
 scripts/update-version v0.0.12
 just verify
 ```
 
-After merging an update, push the matching `vX.Y.Z` tag. The release workflow builds AMD64 and ARM64 manifests, publishes all three flavors with BuildKit SBOM and provenance attestations, and creates a GitHub release.
+After an update lands, push the matching `vX.Y.Z` tag. The release workflow builds AMD64 and ARM64 manifests, publishes all three flavors with BuildKit SBOM and provenance attestations, pins the new runtime manifest digest back to `main`, and creates a GitHub release.
 
 Renovate maintains pinned base images and GitHub Actions. Upstream tunnel-client updates intentionally use the dedicated workflow because the version and two architecture-specific checksums must change atomically.
 
@@ -78,7 +78,7 @@ just verify
 just build runtime
 ```
 
-CI additionally builds and smoke-tests every flavor. Trivy reports the complete image, including findings in the unmodified upstream binaries, and separately blocks fixed high or critical vulnerabilities in layers this repository controls.
+CI additionally builds and smoke-tests every flavor on AMD64 and ARM64, validates the chart values schema, and checks rendered Kubernetes resources with Kubeconform. Trivy reports the complete image, including findings in the unmodified upstream binaries, and separately blocks fixed high or critical vulnerabilities in layers this repository controls.
 
 ## Licensing
 

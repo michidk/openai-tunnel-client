@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag", "digest", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^(|sha256:[a-f0-9]{64})$"
+        },
+        "pullPolicy": {
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    },
+    "tunnel": {
+      "type": "object",
+      "required": ["profileName", "existingConfigMap", "profileMountPath", "apiKeySecret"],
+      "properties": {
+        "profileName": {
+          "type": "string"
+        },
+        "existingConfigMap": {
+          "type": "string"
+        },
+        "profileKey": {
+          "type": "string"
+        },
+        "profileMountPath": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "apiKeySecret": {
+          "type": "object",
+          "required": ["name", "key"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "extraArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "required": ["address", "port"],
+      "properties": {
+        "address": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "tmp": {
+      "type": "object",
+      "required": ["sizeLimit"],
+      "properties": {
+        "sizeLimit": {
+          "type": "string",
+          "pattern": "^[0-9]+([EPTGMK]i?|m)?$"
+        }
+      }
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -5,9 +5,11 @@ on:
     - cron: "17 5 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: update-upstream-main
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -17,8 +19,12 @@ jobs:
   update:
     name: Update version and checksums
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
 
       - name: Update from the latest official release
         id: update
@@ -32,19 +38,16 @@ jobs:
       - name: Verify updated metadata
         run: scripts/verify-release-metadata
 
-      - name: Create update pull request
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
-        with:
-          branch: deps/openai-tunnel-client
-          delete-branch: true
-          commit-message: "chore(deps): update tunnel-client to v${{ steps.update.outputs.version }}"
-          title: "chore(deps): update tunnel-client to v${{ steps.update.outputs.version }}"
-          body: |
-            Updates the packaged OpenAI tunnel-client release and pins both official Linux archive checksums.
-
-            After this merges, create and push tag `v${{ steps.update.outputs.version }}` to publish the images.
-          labels: |
-            dependencies
-            no-stale
-            bot
-
+      - name: Commit update directly to main
+        env:
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          if git diff --quiet -- versions.env charts/openai-tunnel-client/Chart.yaml charts/openai-tunnel-client/values.yaml; then
+            echo "Already packaging tunnel-client v${VERSION}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- versions.env charts/openai-tunnel-client/Chart.yaml charts/openai-tunnel-client/values.yaml
+          git commit -m "chore(deps): update tunnel-client to v${VERSION}"
+          git push origin HEAD:main

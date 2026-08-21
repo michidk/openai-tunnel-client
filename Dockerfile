@@ -14,7 +14,8 @@ RUN python3 /usr/local/src/fetch-release.py \
       --arch "${TARGETARCH}" \
       --sha256-amd64 "${TUNNEL_CLIENT_SHA256_AMD64}" \
       --sha256-arm64 "${TUNNEL_CLIENT_SHA256_ARM64}" \
-      --output /out
+      --output /out \
+    && install -d -m 1777 /runtime-tmp
 
 FROM scratch AS runtime
 ARG TUNNEL_CLIENT_VERSION
@@ -29,6 +30,7 @@ COPY --from=fetch /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 COPY --from=fetch /out/tunnel-client /usr/local/bin/tunnel-client
 COPY --from=fetch /out/cloudflared /usr/local/bin/cloudflared
 COPY --from=fetch /out/compliance/ /usr/share/licenses/tunnel-client/
+COPY --from=fetch --chmod=1777 /runtime-tmp/ /tmp/
 ENV HOME=/tmp \
     PATH=/usr/local/bin \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt

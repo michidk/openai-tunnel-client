@@ -21,7 +21,7 @@ jobs:
         run: python3 -m compileall -q scripts/fetch-release.py
 
       - name: Run ShellCheck
-        run: shellcheck -x scripts/verify-release-metadata scripts/update-version
+        run: shellcheck -x scripts/verify-release-metadata scripts/update-version scripts/setup-kubeconform
 
       - name: Verify pinned upstream checksums
         run: scripts/verify-release-metadata
@@ -30,8 +30,10 @@ jobs:
         run: |
           helm lint charts/openai-tunnel-client \
             --values charts/openai-tunnel-client/ci/test-values.yaml
+          scripts/setup-kubeconform
           helm template test charts/openai-tunnel-client \
-            --values charts/openai-tunnel-client/ci/test-values.yaml >/dev/null
+            --values charts/openai-tunnel-client/ci/test-values.yaml | \
+            .tools/bin/kubeconform -strict -summary -kubernetes-version 1.33.0
 
       - name: Run Hadolint
         uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
@@ -39,14 +41,17 @@ jobs:
           dockerfile: Dockerfile
 
   build:
-    name: Build and smoke-test ${{ matrix.target }}
+    name: Build and smoke-test ${{ matrix.target }} on ${{ matrix.arch }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         target: [runtime, python312, python313]
+        arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
 
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
 
@@ -65,33 +70,34 @@ jobs:
         with:
           context: .
           load: true
+          platforms: linux/${{ matrix.arch }}
           target: ${{ matrix.target }}
-          tags: local/tunnel-client:${{ matrix.target }}
+          tags: local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }}
           build-args: |
             TUNNEL_CLIENT_VERSION=${{ steps.version.outputs.version }}
             TUNNEL_CLIENT_SHA256_AMD64=${{ steps.version.outputs.sha256_amd64 }}
             TUNNEL_CLIENT_SHA256_ARM64=${{ steps.version.outputs.sha256_arm64 }}
-          cache-from: type=gha,scope=${{ matrix.target }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+          cache-from: type=gha,scope=${{ matrix.target }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}-${{ matrix.arch }}
 
       - name: Smoke-test tunnel-client
-        run: docker run --rm local/tunnel-client:${{ matrix.target }} --version
+        run: docker run --rm local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }} --version
 
       - name: Verify runtime identity
-        run: test "$(docker image inspect local/tunnel-client:${{ matrix.target }} --format '{{.Config.User}}')" = "65532:65532"
+        run: test "$(docker image inspect local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }} --format '{{.Config.User}}')" = "65532:65532"
 
       - name: Smoke-test Python toolchain
         if: matrix.target != 'runtime'
-        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c 'python3 --version && uv --version'
+        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }} -c 'python3 --version && uv --version'
 
       - name: Verify pip is absent from Python 3.13
         if: matrix.target == 'python313'
-        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }} -c '! python3 -m pip --version'
+        run: docker run --rm --entrypoint /bin/sh local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }} -c '! python3 -m pip --version'
 
       - name: Report complete image vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: local/tunnel-client:${{ matrix.target }}
+          image-ref: local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }}
           format: table
           exit-code: "0"
           ignore-unfixed: true
@@ -101,7 +107,7 @@ jobs:
       - name: Gate wrapper image vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: local/tunnel-client:${{ matrix.target }}
+          image-ref: local/tunnel-client:${{ matrix.target }}-${{ matrix.arch }}
           format: table
           exit-code: "1"
           ignore-unfixed: true

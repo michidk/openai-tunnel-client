@@ -1,5 +1,3 @@
-image:
-  digest: sha256:ac0fb46820c2ff947d344f3a457f835f7283cb8d0d4c59d754594583bd2e2c5e
 tunnel:
   profileName: example
   existingConfigMap: example-tunnel-profile

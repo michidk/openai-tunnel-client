@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 requested_version=${1:-}
+current_version=$(sed -n 's/^TUNNEL_CLIENT_VERSION=//p' "${repo_root}/versions.env")
 
 if [[ -z "${requested_version}" ]]; then
   requested_version=$(gh api repos/openai/tunnel-client/releases/latest --jq .tag_name)
@@ -38,6 +39,7 @@ cat >"${updated}" <<EOF
 TUNNEL_CLIENT_VERSION=${version}
 TUNNEL_CLIENT_SHA256_AMD64=$(checksum_for amd64)
 TUNNEL_CLIENT_SHA256_ARM64=$(checksum_for arm64)
+
 EOF
 mv "${updated}" "${repo_root}/versions.env"
 
@@ -45,3 +47,9 @@ sed -i -E "s/^(appVersion: ).*/\1\"${version}\"/" \
   "${repo_root}/charts/openai-tunnel-client/Chart.yaml"
 sed -i -E "s/^(  tag: ).*/\1\"${version}\"/" \
   "${repo_root}/charts/openai-tunnel-client/values.yaml"
+if [[ "${version}" != "${current_version}" ]]; then
+  # The manifest digest does not exist until the multi-architecture image is
+  # published. The release workflow pins the new digest back to main.
+  sed -i -E 's/^(  digest: ).*/\1""/' \
+    "${repo_root}/charts/openai-tunnel-client/values.yaml"
+fi

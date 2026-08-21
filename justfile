@@ -5,10 +5,12 @@ default:
 
 verify:
   python3 -m compileall -q scripts/fetch-release.py
-  shellcheck -x scripts/verify-release-metadata scripts/update-version
+  shellcheck -x scripts/verify-release-metadata scripts/update-version scripts/setup-kubeconform
   scripts/verify-release-metadata
   helm lint charts/openai-tunnel-client --values charts/openai-tunnel-client/ci/test-values.yaml
-  helm template test charts/openai-tunnel-client --values charts/openai-tunnel-client/ci/test-values.yaml >/dev/null
+  scripts/setup-kubeconform
+  helm template test charts/openai-tunnel-client --values charts/openai-tunnel-client/ci/test-values.yaml | \
+    .tools/bin/kubeconform -strict -summary -kubernetes-version 1.33.0
 
 update version="":
   scripts/update-version {{version}}

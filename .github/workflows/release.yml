@@ -99,9 +99,48 @@ jobs:
           provenance: mode=max
           sbom: true
 
+  pin-chart:
+    name: Pin chart image digest
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+
+      - name: Pin published runtime manifest
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          source versions.env
+          if [[ "${TUNNEL_CLIENT_VERSION}" != "${VERSION}" ]]; then
+            echo "main has advanced to v${TUNNEL_CLIENT_VERSION}; not changing its chart digest"
+            exit 0
+          fi
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER}/openai-tunnel-client:${VERSION}"
+          digest=$(docker buildx imagetools inspect "${image}" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
+          if [[ ! "${digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "could not resolve the manifest digest for ${image}" >&2
+            exit 1
+          fi
+          sed -i -E "s/^(  digest: ).*/\1\"${digest}\"/" charts/openai-tunnel-client/values.yaml
+          if git diff --quiet -- charts/openai-tunnel-client/values.yaml; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- charts/openai-tunnel-client/values.yaml
+          git commit -m "chore(chart): pin tunnel-client v${VERSION} digest"
+          git push origin HEAD:main
+
   release:
     name: Create GitHub release
-    needs: [check, image]
+    needs: [check, image, pin-chart]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
