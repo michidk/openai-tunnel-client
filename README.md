@@ -50,7 +50,7 @@ The chart deploys a dedicated tunnel client for an existing HTTP MCP server. It 
 ```sh
 helm upgrade --install example \
   oci://ghcr.io/michidk/charts/openai-tunnel-client \
-  --version 0.1.0 \
+  --version 0.1.1 \
   --set tunnel.profileName=example \
   --set tunnel.existingConfigMap=example-tunnel-profile \
   --set tunnel.apiKeySecret.name=example-tunnel-credentials
