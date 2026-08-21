@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.18
+# syntax=docker/dockerfile:1.26
 
 ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-alpine@sha256:138f90e67682b923c4bbcc91d2bae98434e8ba8b32b555e390b055b504f69f91
 ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-alpine@sha256:81285c44b0ed162841eb91d3e6671dd6e63960b86ef47dcbe34d4a9418112175
