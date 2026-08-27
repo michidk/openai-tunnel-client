@@ -2,8 +2,8 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/michidk/openai-tunnel-client
-  tag: "0.0.12"
-  digest: "sha256:ac0fb46820c2ff947d344f3a457f835f7283cb8d0d4c59d754594583bd2e2c5e"
+  tag: "0.0.13"
+  digest: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
