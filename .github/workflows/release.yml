@@ -14,7 +14,7 @@ defaults:
 jobs:
   check:
     name: Validate release tag
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       sha256_amd64: ${{ steps.version.outputs.sha256_amd64 }}
@@ -36,7 +36,7 @@ jobs:
   image:
     name: Publish ${{ matrix.flavor }} image
     needs: check
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: write
@@ -102,7 +102,7 @@ jobs:
   pin-chart:
     name: Pin chart image digest
     needs: [check, image]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
       packages: read
@@ -141,7 +141,7 @@ jobs:
   release:
     name: Create GitHub release
     needs: [check, image, pin-chart]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
