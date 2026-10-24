@@ -1,7 +1,7 @@
-# syntax=docker/dockerfile:1.27
+# syntax=docker/dockerfile:1.28@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
 
-ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-alpine@sha256:94950ee73886c43e87ade23afaae6ac49c00bc6b0045607e1b99e56372a7614e
-ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-alpine@sha256:57cafbeed8d3c012dfb23121c2b1669c6e6554d5e90ef05f95e9c68c0bf9c875
+ARG UV_PYTHON312_IMAGE=ghcr.io/astral-sh/uv:python3.12-alpine@sha256:2501529eb49d9f3ad85ed6ea53fb775f84034587f2ea807dd42b01413a383c1e
+ARG UV_PYTHON313_IMAGE=ghcr.io/astral-sh/uv:python3.13-alpine@sha256:1fd17509ae6051e6cad9dc1b83705483c0b24a15740b3c4d230b6b6f2e2a0241
 
 FROM --platform=$BUILDPLATFORM ${UV_PYTHON312_IMAGE} AS fetch
 ARG TARGETARCH
