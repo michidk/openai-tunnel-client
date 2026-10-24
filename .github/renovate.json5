@@ -13,28 +13,5 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\nTUNNEL_CLIENT_VERSION=(?<currentValue>\\S+)"
       ]
     }
-  ],
-  "packageRules": [
-    {
-      "description": "Require checksum synchronization for tunnel-client releases",
-      "matchPackageNames": [
-        "openai/tunnel-client"
-      ],
-      "enabled": false
-    },
-    {
-      "description": "Group container base image updates",
-      "matchManagers": [
-        "dockerfile"
-      ],
-      "groupName": "container base images"
-    },
-    {
-      "description": "Group GitHub Actions updates",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "groupName": "github actions"
-    }
   ]
 }
